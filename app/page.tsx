@@ -1,63 +1,101 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
+import { realImages } from "@/lib/load-manifest";
+import {
+  decodeImageName,
+  encodeImageName,
+  getRandomImage,
+  getRandomString,
+  updateUrlWithRandom,
+} from "@/lib/image-utils";
 
 export default function Home() {
+  const [currentImage, setCurrentImage] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const hasImages = realImages.length > 0;
+
+  useEffect(() => {
+    if (!hasImages) return;
+    const params = new URLSearchParams(window.location.search);
+    const encodedImg = params.get("img");
+    const decoded = encodedImg ? decodeImageName(encodedImg) : null;
+    const valid = decoded && realImages.includes(decoded) ? decoded : null;
+    const picked = valid ?? getRandomImage(realImages);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setCurrentImage(picked);
+    // Always generate a new random 'r' on mount, overwriting any existing one
+    updateUrlWithRandom(valid ?? undefined);
+  }, [hasImages]);
+
+  useEffect(() => {
+    if (!hasImages) {
+      updateUrlWithRandom();
+    }
+  }, [hasImages]);
+
+  const handleNew = () => {
+    if (!hasImages) return;
+    const next = getRandomImage(realImages);
+    setCurrentImage(next);
+    updateUrlWithRandom();
+  };
+
+  const handleCopy = async () => {
+    if (!currentImage) return;
+    const url = new URL(window.location.href);
+    url.searchParams.set("img", encodeImageName(currentImage));
+    url.searchParams.set("r", getRandomString());
+    await navigator.clipboard.writeText(url.toString());
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1200);
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="flex min-h-screen justify-center bg-white text-neutral-900">
+      <main className="flex w-full max-w-2xl flex-col items-center gap-8 px-8 py-12 pt-[25vh]">
+        <div className="flex w-full justify-center items-center mb-4 gap-4">
+          <a
+            href="#"
+            onClick={handleNew}
+            className="text-lg font-medium hover:underline transition"
+            style={{ textDecorationThickness: 2, color: 'green' }}
+          >
+            New
+          </a>
+          <a
+            href="#"
+            onClick={handleCopy}
+            className="text-lg font-medium hover:underline transition"
+            style={{ textDecorationThickness: 2, color: 'blue' }}
+          >
+            {copied ? "Copied!" : "Share"}
+          </a>
+          <a
+            href="/fakes"
+            className="text-lg font-medium hover:underline transition"
+            style={{ textDecorationThickness: 2, color: 'red' }}
+          >
+            Fakes
+          </a>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+        <div className="relative flex h-[44vh] w-full items-center justify-center">
+          {currentImage ? (
             <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+              src={`/images/real-optimized/${currentImage}`}
+              alt="Real image"
+              fill
+              className="drop-shadow-lg"
+              style={{ objectFit: "contain" }}
+              priority
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+          ) : (
+            <div className="flex h-[44vh] w-full max-w-sm items-center justify-center rounded-xl border border-neutral-200 bg-neutral-50">
+              <p className="text-sm text-neutral-500">Add images and run npm run optimize.</p>
+            </div>
+          )}
         </div>
       </main>
     </div>
