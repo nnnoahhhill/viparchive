@@ -56,7 +56,7 @@ export default function Home() {
   return (
     <div className="flex min-h-screen justify-center bg-white text-neutral-900">
       <main className="flex w-full max-w-2xl flex-col items-center gap-8 px-8 py-12 pt-[25vh]">
-        <div className="flex w-full justify-center items-center mb-4 gap-4">
+        <div className="flex w-full justify-center items-center mb-4 gap-8">
           <a
             href="#"
             onClick={handleNew}

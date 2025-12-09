@@ -4,6 +4,13 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Archive",
   description: "Randomized real images with a fakes gallery.",
+  openGraph: {
+    images: "/banner.png",
+  },
+  twitter: {
+    images: "/banner.png",
+    card: "summary_large_image",
+  },
 };
 
 export default function RootLayout({
